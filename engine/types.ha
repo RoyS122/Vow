@@ -9,18 +9,19 @@ export type Entry = struct {
 
     title: str,
     description: str,
-    related: Relation[],
+    related: []Relation,
     date: i64,
 };
 
 export type Journal = struct {
-    header: struct {
-        magic: [4]u8,
-        length: u32,
-        verMaj: u16,
-        verMin: u16,
-    },
+    header: JournalHeader,
     entries: []Entry,
+};
+export type JournalHeader =  struct {
+    magic: [4]u8,
+    length: u32,
+    verMaj: u16,
+    verMin: u16,
 };
 
 export type EntryStatus = enum u8 {
@@ -36,6 +37,6 @@ export type RelationType = enum u8 {
  };
 
 export type Relation = struct {
-    type: RelationType;
+    kind: RelationType,
     id: u32,
 };

@@ -2,6 +2,8 @@ use fmt;
 use os;
 use strings;
 use fs;
+use io;
+use engine;
 
 export fn init(path: str = "") void = {
     if (path != "") {
@@ -31,10 +33,12 @@ export fn init(path: str = "") void = {
     const vowDataPath = strings::concat(vowDirPath, "/data.vow")!;
     defer free(vowDataPath);
 
+    let journal = engine::NewJournal();
+    let data = engine::JournalToByte(journal);
+    defer free(data);
 
-    let err: (void | fs::error) = os::mkfile(vowDataPath, 0o755);
-    if (err is fs::error) {
-        fmt::println("error:", fs::strerror(err as fs::error))!;
-        return;
-    };
+    let file = os::create(vowDataPath, 0o644)!;
+    defer io::close(file)!;
+
+    io::write(file, data)!;
 };

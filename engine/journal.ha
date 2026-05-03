@@ -1,18 +1,70 @@
-export fn JournalToByte(jrn: Journal) []u8 {
-    let headersize: u64 = size(jrn);
+use endian;
+use bytes;
+
+export fn JournalToByte(jrn: Journal) []u8 = {
+    let headersize: u64 = size(JournalHeader);
     let entriessize: u64 = 0;
-    for ( let i: u32 = 0; i < jrn.length; i ++) {
+
+    for (let i: size = 0; i < len(jrn.entries); i += 1) {
         entriessize = entriessize + jrn.entries[i].totalsize;
     };
 
     let totalsize: u64 = headersize + entriessize;
 
+    let binary  = alloc([0u8...], totalsize)!;
+
+
+    let cursor: size = 0;
+    // HEADER WRITING
+    for (let i: size = 0; i < len(jrn.header.magic); i += 1) {
+        binary[cursor] = jrn.header.magic[i];
+        cursor += 1;
+    };
+
+    endian::leputu32(binary[cursor..cursor + 4], jrn.header.length);
+    cursor += 4;
+
+    endian::leputu16(binary[cursor..cursor + 2], jrn.header.verMaj);
+    cursor += 2;
+
+    endian::leputu16(binary[cursor..cursor + 2], jrn.header.verMin);
+    cursor += 2;
+    // END HEADER WRITING
+    return binary;
 };
 
+export fn ByteToJournal(bytes: []u8) Journal = {
+    let journal: Journal = Journal {
+        header = JournalHeader {
+            magic  = ['V', 'O', 'W', '!'],
+            length = 0,
+            verMaj = 0,
+            verMin = 0,
+        },
+        entries = [],
+    };
 
-export fn NewJournal() Journal {
+    let cursor: size = 0;
+    if (bytes::equal(bytes[cursor..cursor + 4], journal.header.magic))  {
+        return journal;
+    };
+    cursor += 4;
+
+    journal.header.length = endian::legetu32(bytes[cursor..cursor+4]);
+    cursor += 4;
+
+    journal.header.verMaj = endian::legetu16(bytes[cursor..cursor+2]);
+    cursor += 2;
+
+    journal.header.verMin = endian::legetu16(bytes[cursor..cursor+2]);
+    cursor += 2;
+
+    return journal;
+};
+
+export fn NewJournal() Journal =  {
     return  Journal {
-        header = struct {
+        header = JournalHeader {
             magic = ['V', 'O', 'W', '!'],
             length = 0,
             verMaj = 0,
