@@ -1,16 +1,16 @@
 use endian;
-use types;
+
 
 export type Entry = struct {
     totalsize: u32,
     titlesize: u8,
-    relationssize: u8,
+    relationslength: u8,
     status: EntryStatus,
+    date: i64,
 
     title: str,
-    description: str,
     related: []Relation,
-    date: i64,
+    description: str,
 };
 
 export type Journal = struct {
@@ -37,6 +37,6 @@ export type RelationType = enum u8 {
  };
 
 export type Relation = struct {
-    kind: RelationType,
     id: u32,
+    kind: RelationType,
 };

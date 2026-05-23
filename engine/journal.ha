@@ -1,6 +1,7 @@
 use endian;
 use bytes;
-
+use types;
+use utils;
 export fn JournalToByte(jrn: Journal) []u8 = {
     let headersize: u64 = size(JournalHeader);
     let entriessize: u64 = 0;
@@ -29,6 +30,7 @@ export fn JournalToByte(jrn: Journal) []u8 = {
 
     endian::leputu16(binary[cursor..cursor + 2], jrn.header.verMin);
     cursor += 2;
+
     // END HEADER WRITING
     return binary;
 };
@@ -45,7 +47,7 @@ export fn ByteToJournal(bytes: []u8) Journal = {
     };
 
     let cursor: size = 0;
-    if (bytes::equal(bytes[cursor..cursor + 4], journal.header.magic))  {
+    if (! bytes::equal(bytes[cursor..cursor + 4], journal.header.magic))  {
         return journal;
     };
     cursor += 4;
@@ -72,4 +74,20 @@ export fn NewJournal() Journal =  {
         },
         entries = [],
     };
+};
+
+
+export fn appendEntry(e: Entry) []u8 = {
+    const vowDirPath = ".vow/data.vow";
+    let filebytes: []u8 = utils::readfile(vowDirPath);
+    let jrn: Journal = ByteToJournal(filebytes);
+    let newEntry: []u8 = entryToBytes(e);
+    defer free(newEntry);
+
+    append(filebytes, newEntry...)!;
+
+
+    endian::leputu32(filebytes[4..8], jrn.header.length + 1);
+
+    return filebytes;
 };

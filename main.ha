@@ -17,7 +17,7 @@ export fn main() void = {
 			commands::help();
 		};
 		case "init", "i" => commands::init();
-		case "new", "n" => commands::new();
+		case "new", "n" => commands::new(os::args);
 		case "status", "s" => commands::status();
 		case => fmt::printfln("Unknown command: {} please use \"help\" to see list of usable commands", os::args[1])!;
 	};
