@@ -60,3 +60,65 @@ export fn entryToBytes(e: Entry) []u8 = {
 
     return binary;
 };
+
+
+export fn appendEntry(e: Entry) []u8 = {
+    const vowDirPath = ".vow/data.vow";
+    let filebytes: []u8 = utils::readfile(vowDirPath);
+    let jrn: Journal = ByteToJournal(filebytes);
+    let newEntry: []u8 = entryToBytes(e);
+    defer free(newEntry);
+
+    append(filebytes, newEntry...)!;
+
+
+    endian::leputu32(filebytes[4..8], jrn.header.length + 1);
+
+    return filebytes;
+};
+
+export fn readEntry(eid: u32) Entry = {
+    const vowDirPath = ".vow/data.vow";
+    let filebytes: []u8 = utils::readfile(vowDirPath);
+    defer free(filebytes);
+    let jrn: Journal = ByteToJournal(filebytes);
+
+    if(eid > jrn.header.length) {
+        return newEntry("", ""); // void cause of the non existance
+    };
+
+    let off: u32 = 0;
+
+    let cursor: u64 = 12; // size of the header of vow journal
+    for (let id: u32 = 0; id < eid; id += 1) {
+        off = endian::legetu32(filebytes[cursor..cursor+4]);
+        cursor += off;
+    };
+    cursor += 4;
+
+    let titlesize: u8 = filebytes[cursor];
+    cursor += 1;
+
+    let relationslength: u8 = filebytes[cursor];
+    cursor += 1;
+
+    let status: EntryStatus = filebytes[cursor]: EntryStatus;
+    cursor += 1;
+
+    let date: i64 = endian::legetu64(filebytes[cursor..cursor+8]):i64;
+    cursor += 8;
+
+    let title: str = strings::fromutf8(filebytes[cursor..cursor+titlesize])!;
+    cursor += titlesize;
+
+    fmt::println(title)!;
+
+    let descriptionsize: u32 = off - 15 - titlesize;
+    let description: str = strings::fromutf8(filebytes[cursor..cursor+descriptionsize])!;
+    cursor += descriptionsize;
+
+    fmt::println(description)!;
+    // endian::legetiu32(filebytes)
+    //
+    return newEntry(title, description);
+};

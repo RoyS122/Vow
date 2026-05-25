@@ -75,19 +75,3 @@ export fn NewJournal() Journal =  {
         entries = [],
     };
 };
-
-
-export fn appendEntry(e: Entry) []u8 = {
-    const vowDirPath = ".vow/data.vow";
-    let filebytes: []u8 = utils::readfile(vowDirPath);
-    let jrn: Journal = ByteToJournal(filebytes);
-    let newEntry: []u8 = entryToBytes(e);
-    defer free(newEntry);
-
-    append(filebytes, newEntry...)!;
-
-
-    endian::leputu32(filebytes[4..8], jrn.header.length + 1);
-
-    return filebytes;
-};

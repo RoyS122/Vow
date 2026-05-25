@@ -21,4 +21,6 @@ export fn status() void = {
     fmt::printfln("Version: {}.{}", journal.header.verMaj, journal.header.verMin)!;
     fmt::printfln("Nombre d'entrées: {}", journal.header.length)!;
 
+
+    let entry0: engine::Entry = engine::readEntry(0);
 };
