@@ -86,8 +86,11 @@ export fn readEntry(eid: u32) Entry = {
     defer free(filebytes);
     let jrn: Journal = ByteToJournal(filebytes);
 
-    if(eid > jrn.header.length) {
-        return newEntry("", ""); // void cause of the non existance
+    if(eid >= jrn.header.length) {
+        return Entry{
+                status=EntryStatus::NOTEXIST,
+                ...
+            }; // void cause of the non existance
     };
 
     let off: u32 = 0;
@@ -113,17 +116,29 @@ export fn readEntry(eid: u32) Entry = {
     let date: i64 = endian::legetu64(filebytes[cursor..cursor+8]):i64;
     cursor += 8;
 
-    let title: str = strings::fromutf8(filebytes[cursor..cursor+titlesize])!;
+    let title: str = strings::dup(strings::fromutf8(filebytes[cursor..cursor+titlesize])!)!;
     cursor += titlesize;
-    fmt::println("size total vs title size:", off, "vs", titlesize)!;
-    fmt::println("title: ", title)!;
 
     let descriptionsize: u32 = off - 15 - titlesize;
-    let description: str = strings::fromutf8(filebytes[cursor..cursor+descriptionsize])!;
+    let description: str = strings::dup(strings::fromutf8(filebytes[cursor..cursor+descriptionsize])!)!;
     cursor += descriptionsize;
 
-    fmt::println(description)!;
-    // endian::legetiu32(filebytes)
-    //
-    return newEntry(title, description);
+    return Entry{
+        title = title,
+        description = description,
+        date = date,
+        status = status,
+        ...
+    };
+};
+
+export fn statustostr(s: EntryStatus) str = {
+    switch (s) {
+    case EntryStatus::ACCEPTED => return "Accepted";
+    case EntryStatus::PROPOSED => return "Proposed";
+    case EntryStatus::REJECTED => return "Rejected";
+    case EntryStatus::SUPERSEDED => return "Superseded";
+    case =>
+        return "Unknown";
+    };
 };

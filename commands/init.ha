@@ -5,6 +5,8 @@ use fs;
 use io;
 use engine;
 
+//! Cette fonction initialise le journal.
+//! id: l'identifiant initial.
 export fn init(path: str = "") void = {
     if (path != "") {
         let err: (void | fs::error) = os::mkdir(path, 0o755);

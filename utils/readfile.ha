@@ -2,6 +2,8 @@ use fmt;
 use os;
 use io;
 use fs;
+use time;
+use time::date;
 
 
 export fn readfile(path: str) []u8 = {
@@ -18,4 +20,15 @@ export fn readfile(path: str) []u8 = {
 
     io::readall(file as io::file, filebytes)!;
     return filebytes;
+};
+
+export fn formatdate(ts: i64) str = {
+    // 1. Créer un instant à partir de votre timestamp (i64)
+    let instant = time::instant { sec = ts, nsec = 0 };
+
+    // 2. Convertir cet instant en une date typée (locality UTC ou LOCAL)
+    let d = date::from_instant(date::LOCAL, instant);
+
+    // 3. Formater la date en string (n'oubliez pas de libérer la mémoire !)
+    return date::asformat(date::STAMP, &d)!;
 };

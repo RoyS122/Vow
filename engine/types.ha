@@ -1,6 +1,5 @@
 use endian;
 
-
 export type Entry = struct {
     totalsize: u32,
     titlesize: u8,
@@ -29,6 +28,7 @@ export type EntryStatus = enum u8 {
     ACCEPTED = 1,
     REJECTED = 2,
     SUPERSEDED = 3,
+    NOTEXIST = 255,
 };
 
 export type RelationType = enum u8 {
