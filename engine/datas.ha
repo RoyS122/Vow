@@ -34,13 +34,16 @@ export fn entryToBytes(e: Entry) []u8 = {
     cursor += 4;
     binary[cursor] = e.titlesize;
     cursor += 1;
-     binary[cursor] = e.relationslength;
+    binary[cursor] = e.relationslength;
     cursor += 1;
+    binary[cursor] = e.status: u8;
+    cursor += 1;
+
     endian::leputu64(binary[cursor..cursor + 8], e.date: u64);
     cursor += 8;
     let title_bytes = strings::toutf8(e.title);
     for (let i: size = 0; i < len(title_bytes); i += 1) {
-        binary[cursor] = title_bytes[0];
+        binary[cursor] = title_bytes[i];
         cursor += 1;
     };
 
@@ -54,7 +57,7 @@ export fn entryToBytes(e: Entry) []u8 = {
 
     let desc_bytes = strings::toutf8(e.description);
     for (let i: size = 0; i < len(desc_bytes); i += 1) {
-        binary[cursor] = desc_bytes[0];
+        binary[cursor] = desc_bytes[i];
         cursor += 1;
     };
 
@@ -90,10 +93,12 @@ export fn readEntry(eid: u32) Entry = {
     let off: u32 = 0;
 
     let cursor: u64 = 12; // size of the header of vow journal
+
     for (let id: u32 = 0; id < eid; id += 1) {
         off = endian::legetu32(filebytes[cursor..cursor+4]);
         cursor += off;
     };
+    off = endian::legetu32(filebytes[cursor..cursor+4]);
     cursor += 4;
 
     let titlesize: u8 = filebytes[cursor];
@@ -110,8 +115,8 @@ export fn readEntry(eid: u32) Entry = {
 
     let title: str = strings::fromutf8(filebytes[cursor..cursor+titlesize])!;
     cursor += titlesize;
-
-    fmt::println(title)!;
+    fmt::println("size total vs title size:", off, "vs", titlesize)!;
+    fmt::println("title: ", title)!;
 
     let descriptionsize: u32 = off - 15 - titlesize;
     let description: str = strings::fromutf8(filebytes[cursor..cursor+descriptionsize])!;
