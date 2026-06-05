@@ -35,6 +35,20 @@ export fn main() void = {
 			};
 			commands::help();
 		};
+		case "edit", "e" => {
+
+		    if(len(os::args) > 2) {
+				match (strconv::stou32(os::args[2])) {
+                    case let n: u32 =>
+                       	commands::edit(n);
+                    case let err: strconv::error =>
+                        fmt::printfln("Erreur lors de la conversion : {}", strconv::strerror(err))!;
+                };
+
+				return;
+			};
+			commands::help();
+		};
 		case => fmt::printfln("Unknown command: {} please use \"help\" to see list of usable commands", os::args[1])!;
 	};
 

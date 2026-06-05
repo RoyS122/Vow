@@ -4,6 +4,8 @@ use utils;
 use endian;
 use strings;
 use bytes;
+use settings;
+
 
 export fn newEntry(title: str, description: str, status: EntryStatus = EntryStatus::PROPOSED, rels: []Relation = []) Entry = {
 
@@ -131,6 +133,36 @@ export fn readEntry(eid: u32) Entry = {
         ...
     };
 };
+
+export fn editEntry(eid: u32, e: Entry) []u8 = {
+    const vowDirPath = ".vow/data.vow";
+    let filebytes: []u8 = utils::readfile(vowDirPath);
+    defer free(filebytes);
+
+    // let jrn: Journal = ByteToJournal(filebytes);
+
+    let newEntry: []u8 = entryToBytes(e);
+    defer free(newEntry);
+
+    let cursor: u32 = 4 + 4 + 4; // Journal Header Size
+    let esize: u32 = 0;
+    for(let i: u32 = 0; i < eid; i += 1) {
+        esize = endian::legetu32(filebytes[cursor..cursor + 4]);
+        cursor += esize;
+    };
+    esize = endian::legetu32(filebytes[cursor..cursor + 4]);
+    let lastingentries: []u8 = filebytes[cursor + esize..];
+
+    let newfilebytes: []u8 = alloc([0: u8...], len(filebytes) + e.totalsize - esize)!;
+    newfilebytes[0..cursor] = filebytes[0..cursor];
+    newfilebytes[cursor..cursor + e.totalsize] = newEntry;
+    cursor += e.totalsize;
+    newfilebytes[cursor..] = lastingentries;
+
+
+    return newfilebytes;
+};
+
 
 export fn statustostr(s: EntryStatus) str = {
     switch (s) {
