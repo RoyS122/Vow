@@ -40,3 +40,11 @@ export type Relation = struct {
     id: u32,
     kind: RelationType,
 };
+
+export type Command = struct {
+    // handler: fn(args: []str),
+    title: str,
+    desc: str,
+    usage: str,
+    exemples: [](str, str),
+};

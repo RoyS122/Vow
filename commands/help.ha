@@ -1,8 +1,12 @@
 use fmt;
+use settings;
+use engine;
+
 export fn help(command: str = "") void = {
     if (command != "") {
-        fmt::println("help asked for", command)!;
+        PrintCommandDetail(command);
         return;
     };
-    fmt::println("help general asked")!;
+
+    PrintCommandsList();
 };

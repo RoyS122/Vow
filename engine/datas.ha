@@ -68,8 +68,8 @@ export fn entryToBytes(e: Entry) []u8 = {
 
 
 export fn appendEntry(e: Entry) []u8 = {
-    const vowDirPath = ".vow/data.vow";
-    let filebytes: []u8 = utils::readfile(vowDirPath);
+    let filebytes: []u8 = utils::readfile(settings::DATA_FILE);
+
     let jrn: Journal = ByteToJournal(filebytes);
     let newEntry: []u8 = entryToBytes(e);
     defer free(newEntry);
@@ -83,8 +83,8 @@ export fn appendEntry(e: Entry) []u8 = {
 };
 
 export fn readEntry(eid: u32) Entry = {
-    const vowDirPath = ".vow/data.vow";
-    let filebytes: []u8 = utils::readfile(vowDirPath);
+
+    let filebytes: []u8 = utils::readfile(settings::DATA_FILE);
     defer free(filebytes);
     let jrn: Journal = ByteToJournal(filebytes);
 
@@ -134,9 +134,41 @@ export fn readEntry(eid: u32) Entry = {
     };
 };
 
+export fn getEntryList() []Entry = {
+
+    let filebytes: []u8 = utils::readfile(settings::DATA_FILE);
+    defer free(filebytes);
+
+    let jrn: Journal = ByteToJournal(filebytes);
+    let list: []Entry = alloc([Entry{...}...], jrn.header.length)!;
+    let off: u32 = 0;
+
+    let cursor: u64 = 12; // size of the header of vow journal
+
+    for (let id: u32 = 0; id < jrn.header.length; id += 1) {
+        off = endian::legetu32(filebytes[cursor..cursor+4]);
+        cursor += 4;
+
+        let titlesize: u8 = filebytes[cursor];
+        cursor += 3;
+
+        let date: i64 = endian::legetu64(filebytes[cursor..cursor+8]):i64;
+        cursor += 8;
+
+        let title: str = strings::dup(strings::fromutf8(filebytes[cursor..cursor+titlesize])!)!;
+        cursor += titlesize;
+
+        cursor += off - 15 - titlesize;
+        list[id] = Entry{title = title, date = date, ...};
+    };
+
+
+    return list;
+};
+
 export fn editEntry(eid: u32, e: Entry) []u8 = {
-    const vowDirPath = ".vow/data.vow";
-    let filebytes: []u8 = utils::readfile(vowDirPath);
+
+    let filebytes: []u8 = utils::readfile(settings::DATA_FILE);
     defer free(filebytes);
 
     // let jrn: Journal = ByteToJournal(filebytes);

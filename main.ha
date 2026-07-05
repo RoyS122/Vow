@@ -49,6 +49,9 @@ export fn main() void = {
 			};
 			commands::help();
 		};
+		case "list", "l" => {
+		    commands::list();
+		};
 		case => fmt::printfln("Unknown command: {} please use \"help\" to see list of usable commands", os::args[1])!;
 	};
 
