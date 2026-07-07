@@ -52,6 +52,10 @@ export fn main() void = {
 		case "list", "l" => {
 		    commands::list();
 		};
+
+		case "supersede" => {
+		    // commands::supersede();
+		};
 		case => fmt::printfln("Unknown command: {} please use \"help\" to see list of usable commands", os::args[1])!;
 	};
 

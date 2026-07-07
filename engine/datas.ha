@@ -5,7 +5,8 @@ use endian;
 use strings;
 use bytes;
 use settings;
-
+use os;
+use io;
 
 export fn newEntry(title: str, description: str, status: EntryStatus = EntryStatus::PROPOSED, rels: []Relation = []) Entry = {
 
@@ -65,7 +66,6 @@ export fn entryToBytes(e: Entry) []u8 = {
 
     return binary;
 };
-
 
 export fn appendEntry(e: Entry) []u8 = {
     let filebytes: []u8 = utils::readfile(settings::DATA_FILE);
@@ -195,7 +195,6 @@ export fn editEntry(eid: u32, e: Entry) []u8 = {
     return newfilebytes;
 };
 
-
 export fn statustostr(s: EntryStatus) str = {
     switch (s) {
     case EntryStatus::ACCEPTED => return "Accepted";
@@ -205,4 +204,111 @@ export fn statustostr(s: EntryStatus) str = {
     case =>
         return "Unknown";
     };
+};
+
+export fn editEntryStatus(id: u32, newStatus: EntryStatus) void = {
+    let filebytes: []u8 = utils::readfile(settings::DATA_FILE);
+    defer free(filebytes);
+
+    let jrn: Journal = ByteToJournal(filebytes);
+
+    if(id >= jrn.header.length) {
+        return;
+    };
+
+    let cursor: u32 = 4 + 4 + 4; // Journal Header Size
+
+    let esize: u32 = 0;
+    for(let i: size = 0; i < id; i += 1) {
+        esize = endian::legetu32(filebytes[cursor..cursor + 4]);
+        cursor += esize;
+    };
+
+    cursor += 4 + 1 + 1;
+
+    filebytes[cursor] = newStatus;
+
+    let file = os::create(settings::DATA_FILE, 0o644)!;
+    defer io::close(file)!;
+
+    io::write(file, filebytes)!;
+};
+
+export fn addEntryRelation(entryA: u32, relation: Relation) u8 = {
+    let filebytes: []u8 = utils::readfile(settings::DATA_FILE);
+    defer free(filebytes);
+
+    let journallength = endian::legetu32(filebytes[4..8]);
+
+    if(entryA >= journallength) {
+        return 1; // Not exist
+    };
+
+    if(entryA <= relation.id) {
+        return 2; // Superseder must be higer than the superseded
+    };
+
+    let cursor: u32 = 4 + 4 + 4; // Journal Header Size
+
+    let esize: u32 = 0;
+    for(let i: size = 0; i < entryA; i += 1) {
+        esize = endian::legetu32(filebytes[cursor..cursor + 4]);
+        cursor += esize;
+    };
+
+    esize = endian::legetu32(filebytes[cursor..cursor + 4]);
+    let lastingentries: []u8 = filebytes[cursor + esize..]; // split the last entries in new array
+
+    cursor += 4;
+
+    let etitlesize: u8 = filebytes[cursor];
+    cursor += 1;
+
+    let erelationslength: u8 = filebytes[cursor];
+    cursor += 1;
+
+    cursor += 9 + (etitlesize : u32); // Skip status and date and skip to related
+
+    for(let i: size = 0; i < erelationslength; i += 1) {
+        let relId = endian::legetu32(filebytes[cursor..cursor + 4]);
+        cursor += 4;
+        if(relId == relation.id) {
+            if(relation.kind == filebytes[cursor]) {
+                return 3; // Relation already present
+            };
+        };
+        cursor += 1;
+    };
+
+    if(erelationslength >= 255) {
+        return 4; // The relations of this record are already full
+    };
+
+    cursor -= erelationslength * 5; // back before the relations segment
+    cursor -= 9 + (etitlesize : u32);
+
+
+    filebytes[cursor] += 1;
+    cursor -= 5;
+
+    endian::leputu32(filebytes[cursor .. cursor+4], esize + 5);
+    cursor += 4 + 9 + etitlesize + 5 * erelationslength;
+
+
+    let newfilebytes: []u8 = alloc([0: u8...], len(filebytes) + 5)!;
+    newfilebytes[0..cursor] = filebytes[0..cursor];
+    let lasting: []u8 = filebytes[cursor..];
+    endian::leputu32(newfilebytes[cursor..cursor+4], relation.id);
+    cursor += 4;
+    newfilebytes[cursor] = relation.kind;
+    cursor += 1;
+    newfilebytes[cursor..] = lasting;
+
+
+    let file = os::create(settings::DATA_FILE, 0o644)!;
+    defer io::close(file)!;
+
+    io::write(file, newfilebytes)!;
+
+    return 0;
 };
