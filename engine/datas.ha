@@ -119,7 +119,7 @@ export fn readEntry(eid: u32) Entry = {
     cursor += 8;
 
     let title: str = strings::dup(strings::fromutf8(filebytes[cursor..cursor+titlesize])!)!;
-    cursor += titlesize;
+    cursor += titlesize + relationslength * 5;
 
     let descriptionsize: u32 = off - 15 - titlesize;
     let description: str = strings::dup(strings::fromutf8(filebytes[cursor..cursor+descriptionsize])!)!;
@@ -259,15 +259,15 @@ export fn addEntryRelation(entryA: u32, relation: Relation) u8 = {
     esize = endian::legetu32(filebytes[cursor..cursor + 4]);
     let lastingentries: []u8 = filebytes[cursor + esize..]; // split the last entries in new array
 
-    cursor += 4;
+    cursor += 4; // Point at titlesize
 
     let etitlesize: u8 = filebytes[cursor];
-    cursor += 1;
+    cursor += 1; // Point at relationlength
 
     let erelationslength: u8 = filebytes[cursor];
-    cursor += 1;
+    cursor += 1; // Point at status
 
-    cursor += 9 + (etitlesize : u32); // Skip status and date and skip to related
+    cursor += 1 + 8 + (etitlesize : u32); // Skip status and date and title to related
 
     for(let i: size = 0; i < erelationslength; i += 1) {
         let relId = endian::legetu32(filebytes[cursor..cursor + 4]);
@@ -285,14 +285,16 @@ export fn addEntryRelation(entryA: u32, relation: Relation) u8 = {
     };
 
     cursor -= erelationslength * 5; // back before the relations segment
-    cursor -= 9 + (etitlesize : u32);
+    cursor -= (etitlesize : u32) + 8; // point at date
+    cursor -= 1 + 1; // point at relationlength
 
 
-    filebytes[cursor] += 1;
-    cursor -= 5;
+    filebytes[cursor] += 1; // add 1 at relationlength
+    cursor -= 1 + 4;// point at totalsize
 
     endian::leputu32(filebytes[cursor .. cursor+4], esize + 5);
-    cursor += 4 + 9 + etitlesize + 5 * erelationslength;
+
+    cursor += 4 + 1 + 1 + 1 + 8 + (etitlesize : u32) + 5 * (erelationslength : u32); //point at end of related
 
 
     let newfilebytes: []u8 = alloc([0: u8...], len(filebytes) + 5)!;

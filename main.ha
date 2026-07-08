@@ -2,6 +2,7 @@ use fmt;
 use os;
 use commands;
 use strconv;
+use utils;
 
 export fn main() void = {
 
@@ -53,8 +54,14 @@ export fn main() void = {
 		    commands::list();
 		};
 
-		case "supersede" => {
-		    // commands::supersede();
+		case "supersede", "sp" => {
+		    if (len(os::args) < 4) {
+				return;
+			};
+			let old: u32 = utils::atouint(os::args[2]);
+			let new: u32 = utils::atouint(os::args[3]);
+
+			commands::supersede(old, new);
 		};
 		case => fmt::printfln("Unknown command: {} please use \"help\" to see list of usable commands", os::args[1])!;
 	};
