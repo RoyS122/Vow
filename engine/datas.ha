@@ -119,9 +119,9 @@ export fn readEntry(eid: u32) Entry = {
     cursor += 8;
 
     let title: str = strings::dup(strings::fromutf8(filebytes[cursor..cursor+titlesize])!)!;
-    cursor += titlesize + relationslength * 5;
+    cursor += titlesize + relationslength * settings::RELATION_FIXED_SIZE;
 
-    let descriptionsize: u32 = off - 15 - titlesize - (relationslength * 5);
+    let descriptionsize: u32 = off - 15 - titlesize - (relationslength * settings::RELATION_FIXED_SIZE);
     let description: str = strings::dup(strings::fromutf8(filebytes[cursor..cursor+descriptionsize])!)!;
     cursor += descriptionsize;
 
@@ -257,7 +257,6 @@ export fn addEntryRelation(entryA: u32, relation: Relation) u8 = {
     };
 
     esize = endian::legetu32(filebytes[cursor..cursor + 4]);
-    let lastingentries: []u8 = filebytes[cursor + esize..]; // split the last entries in new array
 
     cursor += 4; // Point at titlesize
 
@@ -284,7 +283,7 @@ export fn addEntryRelation(entryA: u32, relation: Relation) u8 = {
         return 4; // The relations of this record are already full
     };
 
-    cursor -= erelationslength * 5; // back before the relations segment
+    cursor -= erelationslength * settings::RELATION_FIXED_SIZE; // back before the relations segment
     cursor -= (etitlesize : u32) + 8; // point at date
     cursor -= 1 + 1; // point at relationlength
 
@@ -292,9 +291,9 @@ export fn addEntryRelation(entryA: u32, relation: Relation) u8 = {
     filebytes[cursor] += 1; // add 1 at relationlength
     cursor -= 1 + 4;// point at totalsize
 
-    endian::leputu32(filebytes[cursor .. cursor+4], esize + 5);
+    endian::leputu32(filebytes[cursor .. cursor+4], esize + settings::RELATION_FIXED_SIZE);
 
-    cursor += 4 + 1 + 1 + 1 + 8 + (etitlesize : u32) + 5 * (erelationslength : u32); //point at end of related
+    cursor += settings::ENTRY_HEADER_FIXED_SIZE + (etitlesize : u32) + settings::RELATION_FIXED_SIZE * (erelationslength : u32); //point at end of related
 
 
     let newfilebytes: []u8 = alloc([0: u8...], len(filebytes) + 5)!;
