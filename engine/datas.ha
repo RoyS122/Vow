@@ -121,7 +121,7 @@ export fn readEntry(eid: u32) Entry = {
     let title: str = strings::dup(strings::fromutf8(filebytes[cursor..cursor+titlesize])!)!;
     cursor += titlesize + relationslength * 5;
 
-    let descriptionsize: u32 = off - 15 - titlesize;
+    let descriptionsize: u32 = off - 15 - titlesize - (relationslength * 5);
     let description: str = strings::dup(strings::fromutf8(filebytes[cursor..cursor+descriptionsize])!)!;
     cursor += descriptionsize;
 
@@ -298,6 +298,7 @@ export fn addEntryRelation(entryA: u32, relation: Relation) u8 = {
 
 
     let newfilebytes: []u8 = alloc([0: u8...], len(filebytes) + 5)!;
+    defer free(newfilebytes);
     newfilebytes[0..cursor] = filebytes[0..cursor];
     let lasting: []u8 = filebytes[cursor..];
     endian::leputu32(newfilebytes[cursor..cursor+4], relation.id);
@@ -309,7 +310,6 @@ export fn addEntryRelation(entryA: u32, relation: Relation) u8 = {
 
     let file = os::create(settings::DATA_FILE, 0o644)!;
     defer io::close(file)!;
-
     io::write(file, newfilebytes)!;
 
     return 0;
