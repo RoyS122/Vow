@@ -54,7 +54,7 @@ export fn main() void = {
 		    commands::list();
 		};
 
-		case "supersede", "sp" => {
+		case "supersede", "su" => {
 		    if (len(os::args) < 4) {
 				return;
 			};
@@ -63,6 +63,25 @@ export fn main() void = {
 
 			commands::supersede(old, new);
 		};
+
+		case "accept", "ac" => {
+		    if (len(os::args) < 3) {
+				return;
+			};
+			let id: u32 = utils::atouint(os::args[2]);
+
+			commands::accept(id);
+		};
+
+		case "reject", "re" => {
+		    if (len(os::args) < 3) {
+				return;
+			};
+			let id: u32 = utils::atouint(os::args[2]);
+
+			commands::reject(id);
+		};
+
 		case => fmt::printfln("Unknown command: {} please use \"help\" to see list of usable commands", os::args[1])!;
 	};
 

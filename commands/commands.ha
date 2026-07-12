@@ -1,7 +1,7 @@
 use engine;
 use fmt;
 
-export const COMMANDS_LIST: [7]engine::Command = [
+export const COMMANDS_LIST: [11]engine::Command = [
     engine::Command {
         title = "help",
         desc = "Display the list of commands or the detail of a command.",
@@ -38,7 +38,7 @@ export const COMMANDS_LIST: [7]engine::Command = [
     engine::Command {
         title = "edit",
         desc = "Allow to rewritte the content of the entry at the given index.",
-        usage = `edit [command name] / e [command name]`,
+        usage = `edit [entry id] / e [entry id]`,
         exemples = [("edit", "Get the help page of this command"), ("edit 1", "Edit the entry at index 1"), ("e 2", "Edit the entry at index 2")],
     },
     engine::Command {
@@ -47,10 +47,31 @@ export const COMMANDS_LIST: [7]engine::Command = [
         usage = `list / l`,
         exemples = [("list", "Display list of the entries."), ("l", "Display list of the entries.")],
     },
+    engine::Command {
+        title = "accept",
+        desc = "Set status of a vow as accepted.",
+        usage = `accept [id] / ac [id]`,
+        exemples = [("accept 1", "Set the status of the entry index 1 as accepted."), ("ac 3", "Change status of the index 3 as accepted.")],
+    },
+    engine::Command {
+        title = "reject",
+        desc = "Set status of a vow as rejected.",
+        usage = `reject [id] / re [id]`,
+        exemples = [("reject 1", "Set the status of the entry index 1 as rejected."), ("re 3", "Change status of the index 3 as rejected.")],
+    },
+    engine::Command {
+        title = "supersede",
+        desc = "Set status of a vow as supersede and add the relations to concerned entries.",
+        usage = `supersede [id old] [id new] / su [id old] [id new]`,
+        exemples = [("supersede 0 1", "Set the status of entry 0 on superseded and add the relation of the entry index 1."), ("su 1 3", "Set the status of entry 0 on superseded and add the relation of the entry index 1.")],
+    },
+    engine::Command {
+        title = "depends",
+        desc = "Add the relations of dependance.",
+        usage = `depends [id] [id dependance] / de [id] [id dependance]`,
+        exemples = [("depends 1 0", "Add the relation depends on the entry 0 in the entry index 1."), ("de 3 1", "Add the relation depends on the entry 1 in the entry index 3.")],
+    },
 ];
-
-
-
 
 export fn PrintCommandsList() void = {
     fmt::println("List of all differents commands:")!;
